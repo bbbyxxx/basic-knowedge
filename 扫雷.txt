@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <windows.h>
+#include <string.h>
+#include <time.h>
+
+
+#define ROW 12
+#define COL 12
+#define MINES 20
+
+
+void Menu()
+{
+	printf("###########################################\n");
+	printf("##    1. Play                  2. Exit   #####\n");
+	printf("###########################################\n");
+	printf("Please Select:> ");
+}
+static int GetIndex(int start, int end)  //产生随机数
+{
+	return rand() % (end - start + 1) + start;  
+ //在1到10之间生成伪随机数，从而达到随机布雷的效果
+}
+void SetMine(char mine_board[][COL], int row, int col)  
+{
+	srand((unsigned long)time(NULL));
+	int mine_num = MINES;
+	while (mine_num){
+		int i_index = GetIndex(1, col - 2);   //[1,10]之间随机产生
+		int j_index = GetIndex(1, col - 2);    //[1，10]之间随机产生
+		if (mine_board[i_index][j_index] == '0'){  //雷用1表示  0表示没有雷
+			mine_board[i_index][j_index] = '1';
+			mine_num--;
+		}
+	}
+}
+int GetMineNum(char mine_board[][COL], int i, int j)   //周围雷的个数   
+{
+	
+/* 用ASCII码表示 即字符0和字符1 ，所以减去周围八个字符0的ASCII码值就是周围雷个数*/
+	return mine_board[i - 1][j - 1] + mine_board[i - 1][j] + \
+		mine_board[i - 1][j + 1] + mine_board[i][j - 1] + \
+		mine_board[i][j + 1] + mine_board[i + 1][j - 1] + \
+		mine_board[i + 1][j] + mine_board[i + 1][j + 1] - 8 * '0';
+}
+void ShowBoard(char show_board[][COL], int row, int col)   //展示界面
+{
+	int i = 1;
+	int j = 1;
+	printf("    ");
+	for (; i <= col - 2; i++){
+		printf("%d   ", i);
+	}
+	printf("\n");
+	for (i = 1; i <= col - 1; i++){
+		printf("----");
+	}
+	printf("\n");
+
+	for (i = 1; i <= row - 2; i++){
+		printf("%2d|", i);
+		for (j = 1; j <= col - 2; j++){
+			printf(" %c |", show_board[i][j]);
+		}
+		printf("\n");
+		int k = 1;
+		for (; k <= col - 1; k++){
+			printf("----");
+		}
+		printf("\n");
+	}
+}
+void PlayGame(char show_board[][COL], char mine_board[][COL], int row, int col)  //游戏运行时
+{
+	int i = 0;
+	int j = 0;
+	int total = (ROW - 2)*(COL - 2);  //有雷和没有雷的总数
+	while (1){
+		ShowBoard(show_board, row, col);
+		printf("Please Enter Pos<x, y>: ");
+		scanf("%d%d", &i, &j);
+		if (i >= 1 && i <= row - 2 && j >= 1 && j <= col - 2){  //保证输入坐标的合法性
+			if (mine_board[i][j] == '0'){  //没有雷
+				int num = GetMineNum(mine_board, i, j);
+				show_board[i][j] = num + '0';   //周围雷的个数
+				total--;  //若输入的坐标不是雷，则总数减一
+				system("cls");  //清屏
+			}
+			else{
+				ShowBoard(mine_board, row, col);  //显示整个界面
+				printf("Game Over! You Lose :(!\n");
+				break;
+			}
+		}
+		else{
+			printf("Enter Error, Try Again!\n");
+			continue;
+		}
+		if (total == MINES){    //最后总数等于雷的个数  则游戏胜利
+			printf("You Win:)\n");
+			break;
+		}
+	}
+}
+void Game()  
+{
+	char show_board[ROW][COL];  //显示页面   用户看到
+	char mine_board[ROW][COL];  //雷的页面   管理员看到
+	memset(show_board, '*', sizeof(show_board));
+	memset(mine_board, '0', sizeof(mine_board));
+
+	SetMine(mine_board, ROW, COL);    //设置雷
+	PlayGame(show_board, mine_board, ROW, COL);   //开始扫雷
+}
+
+int main()
+{
+	int select = 0;
+	int quit = 1;
+	while (quit)
+	{
+		Menu();
+		scanf("%d", &select);
+		switch (select)
+		{
+		case 1:
+			Game();
+			break;
+		case 2:
+			quit = 0;
+			break;
+		default:
+			printf("Wrong Chose!");
+			break;
+		}
+	}
+	system("pause");
+	return 0;
+}
